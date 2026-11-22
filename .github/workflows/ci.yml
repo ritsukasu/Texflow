@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Test and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install TeX Live
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends latexmk biber \
+            texlive-latex-base texlive-latex-recommended texlive-latex-extra \
+            texlive-fonts-recommended texlive-science texlive-pictures texlive-xetex
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+
+  container:
+    name: Container smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          load: true
+          push: false
+          tags: texflow:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+      - name: Run with the same restrictions as production
+        run: |
+          docker run -d --name texflow -p 3001:3001 \
+            --read-only --tmpfs /tmp:size=512m,mode=1777 \
+            --cap-drop ALL --security-opt no-new-privileges:true \
+            -v texflow-data:/data texflow:ci
+      - name: Compile the example project
+        run: ./scripts/smoke.sh http://127.0.0.1:3001
+      - name: Show container logs on failure
+        if: failure()
+        run: docker logs texflow

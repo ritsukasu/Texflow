@@ -1,0 +1,12 @@
+node_modules/
+dist/
+client/public/pdfjs/
+server/data/
+data/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+.vscode/
+.idea/

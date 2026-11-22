@@ -1,0 +1,42 @@
+services:
+  texflow:
+    image: ${TEXFLOW_IMAGE:-ghcr.io/ritsukasu/texflow}:${TEXFLOW_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      DATA_DIR: /data
+      TRUST_PROXY: "1"
+      ALLOW_REGISTRATION: ${ALLOW_REGISTRATION:-true}
+      COMPILE_CONCURRENCY: ${COMPILE_CONCURRENCY:-2}
+    expose:
+      - "3001"
+    volumes:
+      - texflow-data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=512m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 2g
+    pids_limit: 512
+
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    depends_on:
+      - texflow
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:?Set DOMAIN in /opt/texflow/.env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  texflow-data:
+  caddy-data:
+  caddy-config:

@@ -1,0 +1,28 @@
+{
+  "name": "texflow",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A fast, private, browser-based LaTeX editor for researchers.",
+  "license": "MIT",
+  "author": "ritsukasu",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ritsukasu/texflow.git"
+  },
+  "engines": {
+    "node": ">=20.19"
+  },
+  "workspaces": [
+    "server",
+    "client"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c cyan,magenta \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w client",
+    "start": "npm run start -w server",
+    "test": "npm run test -w server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}

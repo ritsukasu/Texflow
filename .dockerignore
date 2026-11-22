@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+client/public/pdfjs
+server/data
+.git
+.github
+docs
+assets
+*.md
+.env
+.env.*
